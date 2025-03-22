@@ -1,5 +1,6 @@
 const { writeFile, readFile } = require("fs").promises;
 
+//* **`` Write to a file
 async function writer() {
   try {
     await writeFile(
@@ -11,7 +12,7 @@ async function writer() {
     console.error(err);
   }
 }
-
+//* **`` Read a file
 async function reader() {
   try {
     const result = await readFile("./temporary/temp.txt", "utf8");
@@ -21,6 +22,7 @@ async function reader() {
   }
 }
 
+//* **`` Calling the write file before the read file
 async function readWrite() {
   try {
     await writer();
