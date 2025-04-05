@@ -1,24 +1,35 @@
 const express = require("express");
 const app = express();
-const cors = require("cors");
-const { products } = require("./data");
+const { products, people } = require("./data");
 
-app.use(cors());
+//* **`` Middleware function that logs the method, url, and current time of requests
+function logger(req, res, next) {
+  console.log(req.method);
+  console.log(req.url);
+  console.log(Date.now());
+  next();
+}
 
-//* **`` Middleware that sends our static files from the public folder
+app.use(logger);
+
+//* **`` Middleware that reads our static files from the public folder
 app.use(express.static("./public"));
 
 //* **`` Middleware test
 app.get("/api/v1/test", (req, res) => {
-  res.json({ message: "It worked!!!" });
+  res.json({ success: true, message: "It worked!!!" });
+});
+
+app.get("/api/v1/people", (req, res) => {
+  res.status(200).json({ success: true, data: people });
 });
 
 //* **`` Middleware that returns products from the data.js file
 app.get("/api/v1/products", (req, res) => {
-  res.json(products);
+  res.status(200).json({ success: true, data: products });
 });
 
-//* **`` Middleware that returns products based off the id passed in the url parameters
+//* **`` Middleware that returns products based off the id passed in the path parameters
 app.get("/api/v1/products/:productID", (req, res) => {
   const productByID = products.find(
     (product) => product.id === Number(req.params.productID)
@@ -26,10 +37,12 @@ app.get("/api/v1/products/:productID", (req, res) => {
 
   productByID
     ? res.json(productByID)
-    : res.status(404).json({ message: "That product was not found" });
+    : res
+        .status(404)
+        .json({ success: false, message: "That product was not found" });
 });
 
-//* **`` Middleware that searches the products based off the url query
+//* **`` Middleware that searches the products based off the query parameters
 app.get("/api/v1/query", (req, res) => {
   let filteredProducts = [...products];
 
@@ -53,11 +66,13 @@ app.get("/api/v1/query", (req, res) => {
   }
 
   filteredProducts.length === 0
-    ? res.status(404).json({ message: "No products were not found" })
-    : res.json(filteredProducts);
+    ? res
+        .status(404)
+        .json({ success: false, message: "No products were found" })
+    : res.status(200).json({ success: true, data: filteredProducts });
 });
 
-//* **`` Middleware that handles all GET requests that are not found
+//* **`` Middleware that handles all requests that are not found
 app.all("*", (req, res) => {
   res.status(404).send("Page not found");
 });
