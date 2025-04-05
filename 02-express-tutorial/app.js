@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
-const { products, people } = require("./data");
+const { products } = require("./data");
+const peopleRouter = require("./routes/people");
 
 //* **`` Middleware function that logs the method, url, and current time of requests
 function logger(req, res, next) {
@@ -10,19 +11,21 @@ function logger(req, res, next) {
   next();
 }
 
+//* **`` Middleware used by all requests
 app.use(logger);
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 //* **`` Middleware that reads our static files from the public folder
-app.use(express.static("./public"));
+app.use(express.static("./methods-public"));
 
 //* **`` Middleware test
 app.get("/api/v1/test", (req, res) => {
-  res.json({ success: true, message: "It worked!!!" });
+  res.status(200).json({ success: true, message: "It worked!!!" });
 });
 
-app.get("/api/v1/people", (req, res) => {
-  res.status(200).json({ success: true, data: people });
-});
+//* **`` Middleware that routes to the people.js file
+app.use("/api/v1/people", peopleRouter);
 
 //* **`` Middleware that returns products from the data.js file
 app.get("/api/v1/products", (req, res) => {
@@ -36,7 +39,7 @@ app.get("/api/v1/products/:productID", (req, res) => {
   );
 
   productByID
-    ? res.json(productByID)
+    ? res.status(200).json({ success: true, data: productByID })
     : res
         .status(404)
         .json({ success: false, message: "That product was not found" });
