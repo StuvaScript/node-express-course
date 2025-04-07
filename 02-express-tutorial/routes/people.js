@@ -8,8 +8,12 @@ const {
 const router = express.Router();
 
 router.get("/", getPeople);
-router.get("/:id", findPerson);
 router.post("/", addPerson);
+
+router.get("/:id", findPerson);
 router.delete("/:id", deletePerson);
+
+// router.route("/").get(getPeople).post(addPerson);
+// router.route("/:id").get(findPerson).delete(deletePerson);
 
 module.exports = router;
