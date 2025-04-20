@@ -1,0 +1,12 @@
+1. asyncWrapper allows us to turn our HTTP requests into callback functions. In the wrapper function, we practice DRY coding by separating the try/catch statements into one single function and putting it into it's own module which further organizes our code. We also pass the error along to an error catching function within the asyncWrapper function.
+
+2.
+
+const getTask = asyncWrapper(async (req, res, next) => {  
+  const { id: taskID } = req.params;  
+  const task = await Task.findOne({ _id: taskID });  
+  if (!task) {  
+    return next(CustomAPIError(`No task with id: ${taskID}`, 404));
+  }  
+  res.status(200).json({ task });  
+}); 
