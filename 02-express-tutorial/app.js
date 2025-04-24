@@ -1,63 +1,75 @@
 const express = require("express");
 const app = express();
-const cors = require("cors");
-const { products } = require("./data");
+const peopleRouter = require("./routes/people");
+const productsRouter = require("./routes/products");
+const queryRouter = require("./routes/query");
+const cookieParser = require("cookie-parser");
 
-app.use(cors());
+//* **`` Middleware function that logs the method, url, and current time of requests
+function logger(req, res, next) {
+  console.log(req.method);
+  console.log(req.url);
+  console.log(new Date(Date.now()).toLocaleTimeString());
+  next();
+}
 
-//* **`` Middleware that sends our static files from the public folder
-app.use(express.static("./public"));
+//* **`` Middleware function that checks if the cookie "name" is present (essentially if the user is logged in)
+function auth(req, res, next) {
+  if (!req.cookies.name) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  req.user = req.cookies.name;
+  next();
+}
+
+//* **`` Middleware used by all requests
+app.use(logger);
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(cookieParser());
+
+//* **`` Middleware that reads our static files from the public folder
+app.use(express.static("./methods-public"));
 
 //* **`` Middleware test
 app.get("/api/v1/test", (req, res) => {
-  res.json({ message: "It worked!!!" });
+  res.status(200).json({ success: true, message: "It worked!!!" });
 });
 
-//* **`` Middleware that returns products from the data.js file
-app.get("/api/v1/products", (req, res) => {
-  res.json(products);
-});
-
-//* **`` Middleware that returns products based off the id passed in the url parameters
-app.get("/api/v1/products/:productID", (req, res) => {
-  const productByID = products.find(
-    (product) => product.id === Number(req.params.productID)
-  );
-
-  productByID
-    ? res.json(productByID)
-    : res.status(404).json({ message: "That product was not found" });
-});
-
-//* **`` Middleware that searches the products based off the url query
-app.get("/api/v1/query", (req, res) => {
-  let filteredProducts = [...products];
-
-  //* **`` Search by name
-  if (req.query.search) {
-    filteredProducts = products.filter((product) =>
-      product.name.startsWith(req.query.search)
-    );
+//* **`` Middleware that creates a cookie based off the name passed in the body
+app.post("/logon", (req, res) => {
+  if (!req.body.name) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Please provide a name" });
   }
 
-  //* **`` Limits the amount of results
-  if (req.query.limit) {
-    filteredProducts = products.slice(0, req.query.limit);
-  }
-
-  //* **`` Filter by price
-  if (req.query.price) {
-    filteredProducts = products.filter(
-      (products) => products.price <= req.query.price
-    );
-  }
-
-  filteredProducts.length === 0
-    ? res.status(404).json({ message: "No products were not found" })
-    : res.json(filteredProducts);
+  res
+    .cookie("name", req.body.name)
+    .status(201)
+    .json({ success: true, message: `Hello ${req.body.name}` });
 });
 
-//* **`` Middleware that handles all GET requests that are not found
+//* **`` Middleware that clears the cookie "name" and essentially logs the user off
+app.delete("/logoff", (req, res) => {
+  res
+    .clearCookie("name")
+    .status(200)
+    .json({ success: true, message: "User has successfully logged off" });
+});
+
+//* **`` Middleware that checks if the user is logged in
+app.get("/test", auth, (req, res) => {
+  res.status(200).json({ success: true, message: `Welcome ${req.user}` });
+});
+
+//* **`` Routes
+app.use("/api/v1/people", peopleRouter);
+app.use("/api/v1/products", productsRouter);
+app.use("/api/v1/query", queryRouter);
+
+//* **`` Middleware that handles all requests that are not found
 app.all("*", (req, res) => {
   res.status(404).send("Page not found");
 });
