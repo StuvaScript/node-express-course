@@ -2,7 +2,7 @@ const express = require("express");
 const logonRouter = require("./routes/signIn");
 const app = express();
 
-//* **`` Middleware ``*
+//* **`` Middleware ``**
 app.use(express.json());
 
 //* **`` Routes ``**
