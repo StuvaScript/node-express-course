@@ -1,10 +1,11 @@
-const logon = (req, res) => {
-  console.log("req body:", req.body);
+const logon = async (req, res) => {
+  const { name, password } = req.body;
+  console.log({ name, password });
 
   res.status(200).json({ token: "Super secret token" });
 };
 
-const hello = (req, res) => {
+const hello = async (req, res) => {
   res.status(200).json({ msg: "Hello" });
 };
 
