@@ -3,19 +3,19 @@ const { BadRequestError, CustomAPIError } = require("../errors");
 const { StatusCodes } = require("http-status-codes");
 
 const logon = async (req, res) => {
-  const { username, password } = req.body;
+  const { name, password } = req.body;
 
-  if (!username || !password) {
+  if (!name || !password) {
     throw new BadRequestError("Please provide username and password");
   }
 
   const id = new Date().getDate(); //* <-- Dummy data
 
   jwt.sign(
-    { id, username },
+    { name },
     process.env.JWT_SECRET,
     {
-      expiresIn: "30d",
+      expiresIn: process.env.JWT_LIFETIME,
     },
     (err, token) => {
       if (err) {
@@ -24,14 +24,14 @@ const logon = async (req, res) => {
           StatusCodes.INTERNAL_SERVER_ERROR
         );
       } else {
-        res.status(200).json({ msg: "user created", token });
+        res.status(200).json({ token });
       }
     }
   );
 };
 
 const hello = async (req, res) => {
-  res.status(200).json({ msg: `Hello ${req.user.username}` });
+  res.status(200).json({ msg: `Hello ${req.user.name}` });
 };
 
 module.exports = { logon, hello };
