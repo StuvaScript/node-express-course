@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { BadRequestError } = require("../errors");
+const { BadRequestError, CustomAPIError } = require("../errors");
+const { StatusCodes } = require("http-status-codes");
 
 const logon = async (req, res) => {
   const { username, password } = req.body;
@@ -10,11 +11,23 @@ const logon = async (req, res) => {
 
   const id = new Date().getDate(); //* <-- Dummy data
 
-  const token = jwt.sign({ id, username }, process.env.JWT_SECRET, {
-    expiresIn: "30d",
-  });
-
-  res.status(200).json({ msg: "user created", token });
+  jwt.sign(
+    { id, username },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "30d",
+    },
+    (err, token) => {
+      if (err) {
+        throw new CustomAPIError(
+          "Something went wrong trying to create your JSON Web Token",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        );
+      } else {
+        res.status(200).json({ msg: "user created", token });
+      }
+    }
+  );
 };
 
 const hello = async (req, res) => {
